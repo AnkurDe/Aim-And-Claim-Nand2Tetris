@@ -1,0 +1,41 @@
+// Already present
+/** Random number generator utility class */
+class Random {
+    static int seed;
+    
+    /** Initializes the random number generator */
+    function void init() {
+        let seed = 12345;  // Default seed
+        return;
+    }
+    
+    /** Sets a new seed for the random number generator */
+    function void setSeed(int newSeed) {
+        let seed = newSeed;
+        return;
+    }
+    
+    /** Returns a pseudo-random number */
+    function int rand() {
+        let seed = (seed * 1309) + 13849;
+        
+        // Keep values positive
+        if (seed < 0) {
+            let seed = seed * -1;
+        }
+        
+        return seed;
+    }
+    
+    /** Returns a random number in the range 0 to (max-1) */
+    function int randRange(int max) {
+        var int value;
+        
+        if (seed = 0) {
+            do Random.init();
+        }
+        
+        let value = Random.rand();
+        return value - ((value / max) * max);
+    }
+}

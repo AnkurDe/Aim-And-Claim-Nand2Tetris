@@ -1,0 +1,267 @@
+/** Game class that controls the overall game flow */
+class Game {
+    field Gun gun;              // The player's gun
+    field Wall wall;            // The wall where targets appear
+    field ScoreBoard scoreBoard; // Tracks score and lives
+    field int level;            // Current game level
+    field int timer;            // Game timer (in cycles)
+    field boolean exit;         // Exit flag
+    field int score;            // Player's score
+    field int lives;            // Player's lives
+    field boolean gameRunning;  // Whether the game is currently running
+    field int currentRound;     // Track current round
+    field int totalRounds;      // Total rounds to complete
+    field boolean roundComplete; // Flag for round completion
+    
+    /** Constructs a new game */
+    constructor Game new() {
+        let gun = Gun.new();
+        let wall = Wall.new();
+        let scoreBoard = ScoreBoard.new();
+        let level = 1;
+        let timer = 3600;       // 1 minute (60 seconds * 60 cycles/second)
+        let exit = false;
+        let score = 0;
+        let lives = 3;
+        let gameRunning = false;
+        let currentRound = 1;
+        let totalRounds = 5;
+        let roundComplete = false;
+        return this;
+    }
+    
+    /** Runs the game loop */
+    method void run() {
+        var char key;
+        var boolean keyPressed;
+        
+        do drawTitleScreen();
+        
+        // Wait for 'P' to start
+        while (~exit) {
+            let key = Keyboard.keyPressed();
+            
+            if (key = 80) {  // 'P' key to start game
+                let gameRunning = true;
+                do startGame();
+            }
+            
+            if (key = 81) {  // 'Q' key to quit
+                let exit = true;
+            }
+            
+            do Sys.wait(50);
+        }
+        
+        return;
+    }
+    
+    /** Starts a new game */
+    method void startGame() {
+        var char key;
+        var boolean keyHeld;
+        
+        let timer = 3600;      // 1 minute
+        let score = 0;
+        let keyHeld = false;
+        let currentRound = 1;
+        let roundComplete = false;
+        
+        // Start first round
+        do Screen.clearScreen();
+        do gun.draw();
+        do wall.initialize();
+        do wall.addStar();
+        do scoreBoard.update(score, lives, timer / 60);
+        
+        // Main game loop
+        while ((timer > 0) & (~exit) & (currentRound < 6)) {
+            let key = Keyboard.keyPressed();
+            
+            if (key = 81) {  // 'Q' to quit
+                let gameRunning = false;
+            }
+            
+            if (key = 130) {  // Left arrow
+                do gun.moveLeft();
+            }
+            
+            if (key = 132) {  // Right arrow
+                do gun.moveRight();
+            }
+            
+            if ((key = 32) & (~keyHeld)) {  // 'Spacebar' to shoot
+                let keyHeld = true;
+                do shoot();
+            }
+            
+            if (key = 0) {
+                let keyHeld = false;
+            }
+            
+            if (wall.isRoundComplete()) {
+                do Screen.clearScreen();  // Clear screen between rounds
+                let currentRound = currentRound + 1;
+                
+                if (currentRound < 6) {
+                    // Start next round
+                    do gun.draw();  // Redraw gun
+                    do wall.initialize();
+                    do wall.addStar();
+                    do Sys.wait(500);  // Short pause between rounds
+                } else {
+                    // Game completed successfully
+                    do displayCongratulations();
+                    let gameRunning = false;
+                }
+            }
+            
+            do scoreBoard.update(score, lives, timer / 60);
+            let timer = timer - 1;
+            
+            if (timer < 1) {
+                do displayGameLost();
+                if (~exit) {  // Only if player didn't choose to exit
+                    return;
+                }
+            }
+            
+            do Sys.wait(16);
+        }
+        
+        do gameOver();
+        return;
+    }
+    
+    /** Handles shooting logic */
+    method void shoot() {
+        var int targetHit;
+        var int points;
+        
+        do gun.shoot();
+        let targetHit = wall.checkHit(gun.getX());
+        
+        if (targetHit = 1) {  // Circle
+            let score = score + 2;
+        }
+        if (targetHit = 2) {  // Square
+            let score = score + 3;
+        }
+        if (targetHit = 3) {  // Triangle
+            let score = score + 5;
+        }
+        if (targetHit = 4) {  // Diamond
+            let score = score + 4;
+        }
+        if (targetHit = 5) {  // Star
+            let score = score + 10;
+        }
+        return;
+    }
+    
+    /** Displays the title screen */
+    method void drawTitleScreen() {
+        do Screen.clearScreen();
+        do Output.moveCursor(6, 24);
+        do Output.printString("AIM AND CLAIM");
+        do Output.moveCursor(10, 17);
+        do Output.printString("Press 'P' to play");
+        do Output.moveCursor(12, 17);
+        do Output.printString("Press 'Q' to quit");
+        do Output.moveCursor(14, 17);
+        do Output.printString("Press leftarrow key to move left");
+        do Output.moveCursor(16, 17);
+        do Output.printString("Press rightarrow key to move right");
+        do Output.moveCursor(18, 17);
+        do Output.printString("Press space key to shoot");
+        return;
+    }
+    
+    /** Displays the game over screen */
+    method void gameOver() {
+        do Screen.clearScreen();
+        do Output.moveCursor(10, 26);
+        do Output.printString("GAME OVER");
+        do Output.moveCursor(12, 15);
+        do Output.printString("Your score: ");
+        do Output.printInt(score);
+        do Output.moveCursor(14, 15);
+        do Output.printString("Lives remaining: ");
+        do Output.printInt(lives);
+        do Output.moveCursor(16, 15);
+        do Output.printString("Press 'P' to play again");
+        do Output.moveCursor(18, 15);
+        do Output.printString("Press 'Q' to quit");
+        return;
+    }
+    
+    /** Display congratulations message */
+    method void displayCongratulations() {
+        do Screen.clearScreen();
+        do Output.moveCursor(10, 20);
+        do Output.printString("CONGRATULATIONS!");
+        do Output.moveCursor(12, 15);
+        do Output.printString("You completed all rounds!");
+        do Sys.wait(2000);
+        return;
+    }
+    
+    /** Display game lost message and handle continue/exit options */
+    method void displayGameLost() {
+        var char key;
+        var boolean chosen;
+        
+        let lives = lives - 1;  // Reduce lives when game is lost
+        
+        if (lives > 0) {
+            do Screen.clearScreen();
+            do Output.moveCursor(10, 22);
+            do Output.printString("TIME'S UP!");
+            do Output.moveCursor(12, 15);
+            do Output.printString("Lives remaining: ");
+            do Output.printInt(lives);
+            do Output.moveCursor(14, 15);
+            do Output.printString("1. Continue Game");
+            do Output.moveCursor(16, 15);
+            do Output.printString("2. Exit Game");
+            
+            let chosen = false;
+            while (~chosen) {
+                let key = Keyboard.keyPressed();
+                if (key = 49) {  // '1' key - Continue
+                    let chosen = true;
+                    let timer = 3600;  // Reset timer
+                    let currentRound = 1;  // Reset to round 1
+                    do startGame();
+                }
+                if (key = 50) {  // '2' key - Exit
+                    let chosen = true;
+                    let exit = true;
+                    let gameRunning = false;
+                }
+                do Sys.wait(50);
+            }
+        } else {
+            do Screen.clearScreen();
+            do Output.moveCursor(10, 22);
+            do Output.printString("GAME OVER!");
+            do Output.moveCursor(12, 15);
+            do Output.printString("No lives remaining");
+            do Output.moveCursor(14, 15);
+            do Output.printString("Your final score: ");
+            do Output.printInt(score);
+            do Sys.wait(2000);
+            let gameRunning = false;
+        }
+        return;
+    }
+    
+    /** Disposes of the game resources */
+    method void dispose() {
+        do gun.dispose();
+        do wall.dispose();
+        do scoreBoard.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

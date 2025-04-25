@@ -1,0 +1,118 @@
+/** Gun class that represents the player's gun */
+class Gun {
+    field int x;      // x-coordinate (horizontal position)
+    field int y;      // y-coordinate (vertical position)
+    field int width;  // Gun width
+    field int height; // Gun height
+    
+    /** Constructs a new gun */
+    constructor Gun new() {
+        let x = 256;  // Center of screen
+        let y = 220;  // Near bottom of screen
+        let width = 20;
+        let height = 20;
+        return this;
+    }
+
+    // Already present    
+    /** Draws the gun on the screen */
+    method void draw() {
+        do Screen.setColor(true);
+        // Draw 3D-like gun (simplified for Jack constraints)
+        // Base rectangle
+        do Screen.drawRectangle(x - (width / 2), y, x + (width / 2), y + height);
+        
+        // Gun barrel
+        do Screen.drawRectangle(x - 2, y - 10, x + 2, y);
+        
+        // Shading for 3D effect
+        do Screen.setColor(false);
+        do Screen.drawRectangle(x - (width / 2) + 1, y + 1, x + (width / 2) - 1, y + height - 1);
+        
+        // Additional details
+        do Screen.setColor(true);
+        do Screen.drawLine(x - (width / 2), y, x - (width / 2) + 5, y - 5);
+        do Screen.drawLine(x + (width / 2), y, x + (width / 2) - 5, y - 5);
+        do Screen.drawLine(x - (width / 2) + 5, y - 5, x + (width / 2) - 5, y - 5);
+        return;
+    }
+    
+    // Already present
+    /** Clears the gun from its current position */
+    method void clear() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(x - (width / 2), y - 10, x + (width / 2), y + height);
+        return;
+    }
+    
+    // Modified
+    /** Moves the gun left */
+    method void moveLeft() {
+        if (x > ((width / 2) + 10)) {
+            do clear();
+            let x = x - 5;
+            if (x < ((width / 2) + 10)) { // Added this check
+                let x = (width / 2) + 10;
+            }
+            do draw();
+        }
+        return;
+    }
+    
+    // Modified
+    /** Moves the gun right */
+    method void moveRight() {
+        if (x < (511 - (width / 2) - 20)) {
+            do clear();
+            let x = x + 5;
+            if (x > (511 - (width / 2) - 20)) { // Added this check
+                let x = 511 - (width / 2) - 20;
+            }
+            do draw();
+        }
+        return;
+    }
+
+    // Already present    
+    /** Simulates shooting */
+    method void shoot() {
+        var int i, bulletY;
+        
+        do Screen.setColor(true);
+        
+        // Draw bullet animation
+        let i = 0;
+        let bulletY = y - 10;
+        
+        while (i < 20) {
+            // Draw bullet
+            do Screen.drawRectangle(x - 1, bulletY - 5, x + 1, bulletY);
+            do Sys.wait(10);
+            
+            // Clear bullet
+            do Screen.setColor(false);
+            do Screen.drawRectangle(x - 1, bulletY - 5, x + 1, bulletY);
+            do Screen.setColor(true);
+            
+            let bulletY = bulletY - 10;
+            let i = i + 1;
+            
+            if (bulletY < 0) {
+                let i = 20; // End animation if top of screen reached
+            }
+        }
+        
+        return;
+    }
+    
+    /** Returns the current x-coordinate */
+    method int getX() {
+        return x;
+    }
+    
+    /** Disposes of the gun */
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}
