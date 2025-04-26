@@ -23,7 +23,7 @@ class Wall {
     }
     
 
-    // Already present
+    // Modified
     /** Initializes the wall with targets */
     method void initialize() {
         var int i;
@@ -39,10 +39,9 @@ class Wall {
         
         // Generate new targets
         let i = 0;
-        while (i < 5) {  // Reduced number of initial targets
-            let targetTypes[i] = Random.randRange(4) + 1;            
-            let targetX[i] = 50 + (i * 80);  // More spread out
-            let targetY[i] = 50 + (Random.randRange(4) * 30);
+        while (i < 5) {  // Generate 5 initial targets
+            let targetTypes[i] = Random.randRange(4) + 1;
+            do getValidPosition(i);
             let targetActive[i] = true;
             do drawTarget(i);
             let activeTargets = activeTargets + 1;
@@ -52,21 +51,20 @@ class Wall {
     }
 
 
-    // Already present
+    // Modified
     /** Adds a star bonus target */
     method void addStar() {
         var int i;
         let i = 0;
         
-        // Find inactive slot
         while (i < maxTargets) {
             if (~targetActive[i]) {
                 let targetTypes[i] = 5;  // 5 = Star
-                let targetX[i] = 100 + (Random.randRange(7) * 40);
-                let targetY[i] = 80 + (Random.randRange(3) * 40);
+                do getValidPosition(i);
                 let targetActive[i] = true;
                 do drawTarget(i);
                 let activeTargets = activeTargets + 1;
+                let starActive = true;
                 return;
             }
             let i = i + 1;
@@ -230,30 +228,72 @@ class Wall {
 
     /** Regenerates targets */
     method void regenerateTargets() {
-        var int i, type, x, y;
+        var int i;
         let i = 0;
         
         while (i < maxTargets) {
-            // Only regenerate targets that are not active
             if (~targetActive[i]) {
-                let type = Random.randRange(4) + 1;  // 1-4 for normal shapes
-                let x = 50 + (Random.randRange(9) * 45);
-                let y = 50 + (Random.randRange(4) * 30);
-                
-                let targetTypes[i] = type;
-                let targetX[i] = x;
-                let targetY[i] = y;
+                let targetTypes[i] = Random.randRange(4) + 1;
+                do getValidPosition(i);
                 let targetActive[i] = true;
-                
                 do drawTarget(i);
                 let activeTargets = activeTargets + 1;
             }
             let i = i + 1;
         }
-        
         return;
     }
     
+    /** Checks if a position would overlap with existing targets */
+    method boolean isOverlapping(int newX, int newY, int index) {
+        var int i, otherX, otherY, distance;
+        let i = 0;
+        
+        while (i < maxTargets) {
+            if (~((i = index) | (~targetActive[i]))) {  // Inverted condition to replace continue
+                let otherX = targetX[i];
+                let otherY = targetY[i];
+                
+                // Calculate distance between points
+                if (newX > otherX) {
+                    let distance = newX - otherX;
+                } else {
+                    let distance = otherX - newX;
+                }
+                
+                // Check Y distance too
+                if ((distance < 40) & 
+                    (Math.abs(newY - otherY) < 40)) {
+                    return true;  // Overlap detected
+                }
+            }
+            let i = i + 1;
+        }
+        return false;
+    }
+
+    /** Gets a valid non-overlapping position */
+    method void getValidPosition(int index) {
+        var int attempts, newX, newY;
+        let attempts = 0;
+        
+        while (attempts < 10) {  // Limit attempts to prevent infinite loop
+            let newX = 50 + (Random.randRange(9) * 45);
+            let newY = 50 + (Random.randRange(4) * 30);
+            
+            if (~isOverlapping(newX, newY, index)) {
+                let targetX[index] = newX;
+                let targetY[index] = newY;
+                return;
+            }
+            let attempts = attempts + 1;
+        }
+        
+        // If no good position found, place at default position with offset
+        let targetX[index] = 50 + (index * 80);
+        let targetY[index] = 50 + (index * 40);
+        return;
+    }
     
     // Already present
     /** Disposes of the wall */
