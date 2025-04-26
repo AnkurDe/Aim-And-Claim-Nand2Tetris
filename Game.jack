@@ -56,7 +56,7 @@ class Game {
         return;
     }
     
-    /** Starts a new game */
+    /** Modified startGame method */
     method void startGame() {
         var char key;
         var boolean keyHeld;
@@ -99,9 +99,13 @@ class Game {
                 let keyHeld = false;
             }
             
+            // Update target positions
+            do wall.updateTargets(level);
+            
             if (wall.isRoundComplete()) {
                 do Screen.clearScreen();  // Clear screen between rounds
                 let currentRound = currentRound + 1;
+                let level = 2;  // Move to level 2 after first round
                 
                 if (currentRound < 6) {
                     // Start next round

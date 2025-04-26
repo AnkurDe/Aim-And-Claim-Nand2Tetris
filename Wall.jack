@@ -7,7 +7,10 @@ class Wall {
     field Array targetActive;  // Whether each target is active
     field int maxTargets;      // Maximum number of targets
     field int activeTargets;   // Current number of active targets
-    field boolean starActive;     // Track if star is active
+    field boolean starActive;  // Track if star is active
+    field Array targetDX;      // X direction of movement (-1, 0, 1)
+    field Array targetDY;      // Y direction of movement (-1, 0, 1)
+    field int moveSpeed;       // Movement speed of targets
     
     // Slight change
     constructor Wall new() {    
@@ -17,8 +20,11 @@ class Wall {
         let targetX = Array.new(maxTargets);
         let targetY = Array.new(maxTargets);
         let targetActive = Array.new(maxTargets);
+        let targetDX = Array.new(maxTargets);
+        let targetDY = Array.new(maxTargets);
         let activeTargets = 0;
         let starActive = false;
+        let moveSpeed = 1;
         return this;
     }
     
@@ -272,7 +278,7 @@ class Wall {
         return false;
     }
 
-    /** Gets a valid non-overlapping position */
+    /** Modified getValidPosition to include movement direction */
     method void getValidPosition(int index) {
         var int attempts, newX, newY;
         let attempts = 0;
@@ -284,6 +290,10 @@ class Wall {
             if (~isOverlapping(newX, newY, index)) {
                 let targetX[index] = newX;
                 let targetY[index] = newY;
+                
+                // Set random movement direction
+                let targetDX[index] = Random.randRange(3) - 1;  // -1, 0, or 1
+                let targetDY[index] = Random.randRange(3) - 1;  // -1, 0, or 1
                 return;
             }
             let attempts = attempts + 1;
@@ -292,16 +302,90 @@ class Wall {
         // If no good position found, place at default position with offset
         let targetX[index] = 50 + (index * 80);
         let targetY[index] = 50 + (index * 40);
+        
+        // Set random movement direction
+        let targetDX[index] = Random.randRange(3) - 1;  // -1, 0, or 1
+        let targetDY[index] = Random.randRange(3) - 1;  // -1, 0, or 1
         return;
     }
     
-    // Already present
-    /** Disposes of the wall */
+    /** Updates target positions based on current level */
+    method void updateTargets(int level) {
+        var int i, oldX, oldY;
+        let i = 0;
+        
+        if (level > 1) {  // Only move targets in level 2+
+            while (i < maxTargets) {
+                if (targetActive[i]) {
+                    // Store old position
+                    let oldX = targetX[i];
+                    let oldY = targetY[i];
+                    
+                    // Calculate new position
+                    let targetX[i] = targetX[i] + (targetDX[i] * moveSpeed);
+                    let targetY[i] = targetY[i] + (targetDY[i] * moveSpeed);
+                    
+                    // Bounce off screen edges
+                    if ((targetX[i] < 30) | (targetX[i] > 480)) {
+                        let targetDX[i] = -targetDX[i];
+                        let targetX[i] = oldX;  // Revert to old position
+                    }
+                    if ((targetY[i] < 30) | (targetY[i] > 200)) {
+                        let targetDY[i] = -targetDY[i];
+                        let targetY[i] = oldY;  // Revert to old position
+                    }
+                    
+                    // Clear old position first
+                    do Screen.setColor(false);
+                    if (targetTypes[i] = 1) {  // Circle
+                        do Screen.drawCircle(oldX, oldY, 15);
+                    }
+                    if (targetTypes[i] = 2) {  // Square
+                        do Screen.drawRectangle(oldX - 15, oldY - 15, oldX + 15, oldY + 15);
+                    }
+                    if (targetTypes[i] = 3) {  // Triangle
+                        do drawTriangle(oldX, oldY, 15);
+                    }
+                    if (targetTypes[i] = 4) {  // Diamond
+                        do drawDiamond(oldX, oldY, 15);
+                    }
+                    if (targetTypes[i] = 5) {  // Star
+                        do drawStar(oldX, oldY, 15);
+                    }
+                    
+                    // Draw at new position
+                    do Screen.setColor(true);
+                    if (targetTypes[i] = 1) {  // Circle
+                        do Screen.drawCircle(targetX[i], targetY[i], 15);
+                    }
+                    if (targetTypes[i] = 2) {  // Square
+                        do Screen.drawRectangle(targetX[i] - 15, targetY[i] - 15, 
+                                             targetX[i] + 15, targetY[i] + 15);
+                    }
+                    if (targetTypes[i] = 3) {  // Triangle
+                        do drawTriangle(targetX[i], targetY[i], 15);
+                    }
+                    if (targetTypes[i] = 4) {  // Diamond
+                        do drawDiamond(targetX[i], targetY[i], 15);
+                    }
+                    if (targetTypes[i] = 5) {  // Star
+                        do drawStar(targetX[i], targetY[i], 15);
+                    }
+                }
+                let i = i + 1;
+            }
+        }
+        return;
+    }
+
+    /** Modified dispose method */
     method void dispose() {
         do targetX.dispose();
         do targetY.dispose();
         do targetTypes.dispose();
         do targetActive.dispose();
+        do targetDX.dispose();
+        do targetDY.dispose();
         do targets.dispose();
         do Memory.deAlloc(this);
         return;
