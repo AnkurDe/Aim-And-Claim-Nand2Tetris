@@ -42,17 +42,13 @@ class Game {
         
         do drawTitleScreen();
         
-        // Wait for 'P' to start
-        while (~exit) {
+        // Wait for Enter to start
+        while (~gameRunning) {
             let key = Keyboard.keyPressed();
             
-            if (key = 80) {  // 'P' key to start game
+            if (key = 128) {  // Enter key to start game
                 let gameRunning = true;
                 do startGame();
-            }
-            
-            if (key = 81) {  // 'Q' key to quit
-                let exit = true;
             }
             
             do Sys.wait(50);
@@ -246,22 +242,82 @@ class Game {
         }
         return;
     }
-    
-    /** Displays the title screen */
+
+
     method void drawTitleScreen() {
+        var char key;
+        
         do Screen.clearScreen();
-        do Output.moveCursor(6, 24);
-        do Output.printString("AIM AND CLAIM");
-        do Output.moveCursor(10, 17);
-        do Output.printString("Press 'P' to play");
-        do Output.moveCursor(12, 17);
-        do Output.printString("Press 'Q' to quit");
-        do Output.moveCursor(14, 17);
-        do Output.printString("Press leftarrow key to move left");
-        do Output.moveCursor(16, 17);
-        do Output.printString("Press rightarrow key to move right");
-        do Output.moveCursor(18, 17);
-        do Output.printString("Press space key to shoot");
+        
+        // Draw borders
+        do Screen.drawLine(30, 30, 480, 30);   // Top edge
+        do Screen.drawLine(30, 30, 30, 230);   // Left edge
+        do Screen.drawLine(30, 230, 480, 230); // Bottom edge
+        do Screen.drawLine(480, 30, 480, 230); // Right edge
+
+        // Inner box
+        do Screen.drawLine(33, 33, 477, 33);   // Top edge
+        do Screen.drawLine(33, 33, 33, 227);   // Left edge
+        do Screen.drawLine(33, 227, 477, 227); // Bottom edge
+        do Screen.drawLine(477, 33, 477, 227); // Right edge
+
+        // Draw title letters
+        // A
+        do Screen.drawLine(90, 150, 105, 110);   // Left diagonal
+        do Screen.drawLine(105, 110, 120, 150);   // Right diagonal
+        do Screen.drawLine(96, 130, 114, 130);   // Crossbar
+
+        // I
+        do Screen.drawLine(130, 110, 130, 150);   // Vertical
+
+        // M
+        do Screen.drawLine(140, 150, 140, 110);   // Left vertical
+        do Screen.drawLine(140, 110, 155, 130);   // Left diagonal up
+        do Screen.drawLine(155, 130, 170, 110);   // Right diagonal down
+        do Screen.drawLine(170, 110, 170, 150);   // Right vertical
+
+        // A
+        do Screen.drawLine(190, 150, 205, 110);   // Left diagonal
+        do Screen.drawLine(205, 110, 220, 150);   // Right diagonal
+        do Screen.drawLine(196, 130, 214, 130);   // Crossbar
+
+        // N
+        do Screen.drawLine(230, 150, 230, 110);   // Left vertical
+        do Screen.drawLine(230, 110, 245, 150);   // Diagonal
+        do Screen.drawLine(245, 150, 245, 110);   // Right vertical
+
+        // D
+        do Screen.drawLine(255, 150, 255, 110);   // Left vertical
+        do Screen.drawLine(255, 110, 270, 120);   // Top curve
+        do Screen.drawLine(270, 120, 270, 140);   // Right vertical
+        do Screen.drawLine(270, 140, 255, 150);   // Bottom curve
+
+        // C
+        do Screen.drawLine(290, 110, 310, 110);   // Top
+        do Screen.drawLine(290, 110, 290, 150);   // Left
+        do Screen.drawLine(290, 150, 310, 150);   // Bottom
+
+        // L
+        do Screen.drawLine(320, 110, 320, 150);   // Vertical
+        do Screen.drawLine(320, 150, 340, 150);   // Bottom
+
+        // A
+        do Screen.drawLine(350, 150, 365, 110);   // Left diagonal
+        do Screen.drawLine(365, 110, 380, 150);   // Right diagonal
+        do Screen.drawLine(356, 130, 374, 130);   // Crossbar
+
+        // I
+        do Screen.drawLine(390, 110, 390, 150);   // Vertical
+
+        // M
+        do Screen.drawLine(400, 150, 400, 110);   // Left vertical
+		do Screen.drawLine(400, 110, 415, 130);   // Left diagonal up
+		do Screen.drawLine(415, 130, 430, 110);   // Right diagonal down
+		do Screen.drawLine(430, 110, 430, 150);   // Right vertical
+        // Print instructions
+        do Output.moveCursor(20, 18);
+        do Output.printString("Press ENTER to continue");
+
         return;
     }
     
