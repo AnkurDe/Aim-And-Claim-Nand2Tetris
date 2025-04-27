@@ -61,20 +61,19 @@ class Game {
         return;
     }
     
-    /** Shows math question between levels. Returns 1 if correct, 0 if wrong/timeout */
+    /** Shows a random math question between levels. Returns 1 if correct, 0 if wrong */
     method int showMathQuestion() {
-        var int num1, num2, correctAnswer, userAnswer;
+        var int num1, num2, correctAnswer, userAnswer, inputLen, i;
         var char key;
         var String answer;
-        var int timer;
         var String tempString;
-        
+
         let num1 = Random.randRange(50);
         let num2 = Random.randRange(50);
         let correctAnswer = num1 + num2;
-        let timer = mathTimer;
         let answer = String.new(5);
-        
+        let inputLen = 0;
+
         do Screen.clearScreen();
         do Output.moveCursor(10, 20);
         do Output.printString("Level 1 Complete!");
@@ -86,55 +85,48 @@ class Game {
         do Output.printString(" + ");
         do Output.printInt(num2);
         do Output.printString("?");
-        
-        while (timer > 0) {
+
+        // Accept up to 5 digits, Enter to submit
+        while (true) {
             let key = Keyboard.keyPressed();
-            if ((key > 47) & (key < 58)) {  // Number keys
+            if ((key > 47) & (key < 58) & (inputLen < 5)) {  // Number keys
+                do answer.appendChar(key);
+                let inputLen = inputLen + 1;
                 do Output.moveCursor(16, 20);
-                let tempString = String.new(1);
-                do tempString.appendChar(key);
-                do Output.printString(tempString);
-                do tempString.dispose();
-                let userAnswer = key - 48;  // Convert ASCII to number
-                
-                // Wait for Enter key
-                while ((key = Keyboard.keyPressed()) = 0) {
-                    let timer = timer - 1;
-                    do Sys.wait(16);
-                    if (timer < 1) {
-                        let lives = lives - 1;
-                        do Output.moveCursor(18, 20);
-                        do Output.printString("Time's up! -1 life");
-                        do Sys.wait(2000);
-                        return 0;
-                    }
-                }
-                
-                if (key = 128) {  // Enter key
-                    if (userAnswer = correctAnswer) {
-                        let score = score + 100;
-                        do Output.moveCursor(18, 20);
-                        do Output.printString("Correct! +100 points!");
-                        do Sys.wait(2000);
-                        return 1;
-                    } else {
-                        let lives = lives - 1;
-                        do Output.moveCursor(18, 20);
-                        do Output.printString("Wrong! -1 life");
-                        do Sys.wait(2000);
-                        return 0;
-                    }
+                do Output.printString(answer);
+                // Wait for key release
+                while (~(Keyboard.keyPressed() = 0)) {
+                    do Sys.wait(5);
                 }
             }
-            let timer = timer - 1;
-            do Sys.wait(16);
+            if (key = 128) {  // Enter key
+                // Convert answer string to int
+                let userAnswer = 0;
+                let i = 0;
+                while (i < inputLen) {
+                    let userAnswer = userAnswer * 10 + (String.charAt(answer, i) - 48);
+                    let i = i + 1;
+                }
+                if (userAnswer = correctAnswer) {
+                    let score = score + 100;
+                    do Output.moveCursor(18, 20);
+                    do Output.printString("Correct! +100 points!");
+                    do Sys.wait(2000);
+                    do answer.dispose();
+                    return 1;
+                } else {
+                    let lives = lives - 1;
+                    do Output.moveCursor(18, 20);
+                    do Output.printString("Wrong! -1 life");
+                    do Sys.wait(2000);
+                    do answer.dispose();
+                    return 0;
+                }
+            }
+            do Sys.wait(10);
         }
-        
-        // Time's up or no answer at all
-        let lives = lives - 1;
-        do Output.moveCursor(18, 20);
-        do Output.printString("Time's up! -1 life");
-        do Sys.wait(2000);
+        // ...should never reach here...
+        do answer.dispose();
         return 0;
     }
 
