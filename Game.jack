@@ -169,8 +169,8 @@ class Game {
                 let keyHeld = false;
             }
             
-            // Update target positions
-            do wall.updateTargets(level);
+            // Update target positions with lives parameter
+            do wall.updateTargets(level, lives);
             
             if (wall.isRoundComplete()) {
                 let currentRound = currentRound + 1;
@@ -217,7 +217,7 @@ class Game {
         return;
     }
     
-    /** Handles shooting logic */
+    /** Modified shoot method to handle heart bonus */
     method void shoot() {
         var int targetHit;
         var int points;
@@ -240,9 +240,12 @@ class Game {
         if (targetHit = 5) {  // Star
             let score = score + 10;
         }
+        if (targetHit = 6) {  // Heart
+            let lives = lives + 1;
+            if (lives > 3) { let lives = 3; }
+        }
         return;
     }
-
 
     method void drawTitleScreen() {
         var char key;

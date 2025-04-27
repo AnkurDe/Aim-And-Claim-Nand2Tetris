@@ -11,6 +11,7 @@ class Wall {
     field Array targetDX;      // X direction of movement (-1, 0, 1)
     field Array targetDY;      // Y direction of movement (-1, 0, 1)
     field int moveSpeed;       // Movement speed of targets
+    field boolean heartActive;  // Track if heart is active
     
     // Slight change
     constructor Wall new() {    
@@ -25,6 +26,7 @@ class Wall {
         let activeTargets = 0;
         let starActive = false;
         let moveSpeed = 1;
+        let heartActive = false;
         return this;
     }
     
@@ -119,6 +121,9 @@ class Wall {
         if (type = 5) {  // Star (bonus)
             do drawStar(x, y, size);
         }
+        if (type = 6) {  // Heart (bonus)
+            do drawHeart(x, y, size);
+        }
         return;
     }
     
@@ -163,7 +168,60 @@ class Wall {
         return;
     }
 
-    
+    /** Draws a heart */
+    method void drawHeart(int x, int y, int size) {
+        var int i;
+        // Draw outline for better visibility
+        do Screen.drawRectangle(x - (size/2), y, x + (size/2), y + size);  // Center
+        do Screen.drawLine(x - size, y, x - (size/2), y - (size/2));       // Left arc
+        do Screen.drawLine(x + (size/2), y - (size/2), x + size, y);       // Right arc
+        do Screen.drawLine(x - size, y, x, y + size);                      // Left diagonal
+        do Screen.drawLine(x + size, y, x, y + size);                      // Right diagonal
+        return;
+    }
+
+    /** Modified spawn position for heart */
+    method void spawnHeart(int lives) {
+        var int i;
+        if ((~heartActive) & (lives < 3)) {
+            let i = 0;
+            while (i < maxTargets) {
+                if (~targetActive[i]) {
+                    let targetTypes[i] = 6;  // 6 = Heart
+                    // Place heart in more visible location
+                    let targetX[i] = 50 + Random.randRange(400); // Random X between 50-450
+                    let targetY[i] = 50 + Random.randRange(100); // Random Y between 50-150
+                    let targetActive[i] = true;
+                    let heartActive = true;
+                    do drawTarget(i);
+                    let activeTargets = activeTargets + 1;
+                    return;
+                }
+                let i = i + 1;
+            }
+        }
+        return;
+    }
+
+    /** Adds a heart bonus target */
+    method void addHeart() {
+        var int i;
+        let i = 0;
+        
+        while (i < maxTargets) {
+            if (~targetActive[i]) {
+                let targetTypes[i] = 6;  // 6 = Heart
+                do getValidPosition(i);
+                let targetActive[i] = true;
+                do drawTarget(i);
+                let activeTargets = activeTargets + 1;
+                return;
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
     // Slightly Modified
     /** Checks if a shot hits a target */
     method int checkHit(int gunX) {
@@ -190,6 +248,9 @@ class Wall {
                     let hitType = type;
                     if (type = 5) { // Star hit
                         let starActive = false;
+                    }
+                    if (type = 6) { // Heart hit
+                        let heartActive = false;
                     }
                     
                     return hitType;
@@ -227,6 +288,9 @@ class Wall {
         }
         if (type = 5) {  // Star (bonus)
             do drawStar(x, y, size);
+        }
+        if (type = 6) {  // Heart (bonus)
+            do drawHeart(x, y, size);
         }
         return;
     }
@@ -310,10 +374,13 @@ class Wall {
     }
     
     /** Updates target positions based on current level */
-    method void updateTargets(int level) {
+    method void updateTargets(int level, int lives) {
         var int i, oldX, oldY;
         let i = 0;
-        
+
+        // Check and spawn heart bonus shape
+        do spawnHeart(lives);
+
         if (level > 1) {  // Only move targets in level 2+
             while (i < maxTargets) {
                 if (targetActive[i]) {
@@ -352,6 +419,9 @@ class Wall {
                     if (targetTypes[i] = 5) {  // Star
                         do drawStar(oldX, oldY, 15);
                     }
+                    if (targetTypes[i] = 6) {  // Heart
+                        do drawHeart(oldX, oldY, 15);
+                    }
                     
                     // Draw at new position
                     do Screen.setColor(true);
@@ -370,6 +440,9 @@ class Wall {
                     }
                     if (targetTypes[i] = 5) {  // Star
                         do drawStar(targetX[i], targetY[i], 15);
+                    }
+                    if (targetTypes[i] = 6) {  // Heart
+                        do drawHeart(targetX[i], targetY[i], 15);
                     }
                 }
                 let i = i + 1;
