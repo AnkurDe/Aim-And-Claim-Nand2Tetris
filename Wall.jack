@@ -168,17 +168,23 @@ class Wall {
         return;
     }
 
+
     /** Draws a heart */
     method void drawHeart(int x, int y, int size) {
-        var int i;
-        // Draw outline for better visibility
-        do Screen.drawRectangle(x - (size/2), y, x + (size/2), y + size);  // Center
-        do Screen.drawLine(x - size, y, x - (size/2), y - (size/2));       // Left arc
-        do Screen.drawLine(x + (size/2), y - (size/2), x + size, y);       // Right arc
-        do Screen.drawLine(x - size, y, x, y + size);                      // Left diagonal
-        do Screen.drawLine(x + size, y, x, y + size);                      // Right diagonal
+        var int halfSize;
+        let halfSize = size;
+        
+        // Draw left cusp using lines
+        do Screen.drawLine(x, y - halfSize, x - halfSize, y);  // Upper left diagonal
+        do Screen.drawLine(x - halfSize, y, x, y + halfSize);  // Lower left diagonal
+        
+        // Draw right cusp using lines
+        do Screen.drawLine(x, y - halfSize, x + halfSize, y);  // Upper right diagonal
+        do Screen.drawLine(x + halfSize, y, x, y + halfSize);  // Lower right diagonal
+        
         return;
     }
+
 
     /** Modified spawn position for heart */
     method void spawnHeart(int lives) {
