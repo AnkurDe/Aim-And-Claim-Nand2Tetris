@@ -15,7 +15,12 @@ class ScoreBoard {
     /** Updates the score board display */
     method void update(int score, int lives, int timeLeft) {
         var int minutes, seconds;
-        
+
+        // Enforce a maximum of 3 lives
+        if (lives > 3) {
+            let lives = 3;
+        }
+
         // Only update if values changed (to avoid flicker)
         if (~(score = lastScore)) {
             do clearScore();
