@@ -225,6 +225,12 @@ class Game {
         do gun.shoot();
         let targetHit = wall.checkHit(gun.getX());
         
+        if (targetHit = 6) {  // Heart
+            let lives = lives + 1;
+            if (lives > 3) { let lives = 3; }
+            do scoreBoard.update(score, lives, timer / 60);  // Immediately update display
+        }
+        
         if (targetHit = 1) {  // Circle
             let score = score + 2;
         }
@@ -239,10 +245,6 @@ class Game {
         }
         if (targetHit = 5) {  // Star
             let score = score + 10;
-        }
-        if (targetHit = 6) {  // Heart
-            let lives = lives + 1;
-            if (lives > 3) { let lives = 3; }
         }
         return;
     }
