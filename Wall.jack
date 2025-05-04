@@ -11,6 +11,7 @@ class Wall {
     field Array targetDX;      // X direction of movement (-1, 0, 1)
     field Array targetDY;      // Y direction of movement (-1, 0, 1)
     field int moveSpeed;       // Movement speed of targets
+    field boolean heartActive;  // Track if heart is active
     
     // Slight change
     constructor Wall new() {    
@@ -25,6 +26,7 @@ class Wall {
         let activeTargets = 0;
         let starActive = false;
         let moveSpeed = 1;
+        let heartActive = false;
         return this;
     }
     
@@ -119,6 +121,9 @@ class Wall {
         if (type = 5) {  // Star (bonus)
             do drawStar(x, y, size);
         }
+        if (type = 6) {  // Heart (bonus)
+            do drawHeart(x, y, size);
+        }
         return;
     }
     
@@ -163,7 +168,127 @@ class Wall {
         return;
     }
 
-    
+
+    /** Draws a heart */
+    method void drawHeart(int x, int y, int size) {
+        var int memAddress, screenX, screenY, location;
+        // Adjust for heart sprite size to center it at target coordinates
+        let screenX = x - 8;  // Changed from 16 to 8 to center the heart
+        let screenY = y - 8;  // Changed from 16 to 8 to center the heart
+        let location = screenX + (screenY * 32);
+        let memAddress = 16384+location;
+
+        // column 0
+        do Memory.poke(memAddress, 2016);
+        do Memory.poke(memAddress +32, 8184);
+        do Memory.poke(memAddress +64, 16380);
+        do Memory.poke(memAddress +96, 32766);
+        do Memory.poke(memAddress +128, 32766);
+        do Memory.poke(memAddress +160, -1);
+        do Memory.poke(memAddress +192, -1);
+        do Memory.poke(memAddress +224, -1);
+        do Memory.poke(memAddress +256, -1);
+        do Memory.poke(memAddress +288, -1);
+        do Memory.poke(memAddress +320, -1);
+        do Memory.poke(memAddress +352, -1);
+        do Memory.poke(memAddress +384, -1);
+        do Memory.poke(memAddress +416, -1);
+        do Memory.poke(memAddress +448, -1);
+        do Memory.poke(memAddress +480, -1);
+        do Memory.poke(memAddress +512, -1);
+        do Memory.poke(memAddress +544, -2);
+        do Memory.poke(memAddress +576, -4);
+        do Memory.poke(memAddress +608, -8);
+        do Memory.poke(memAddress +640, -16);
+        do Memory.poke(memAddress +672, -32);
+        do Memory.poke(memAddress +704, -64);
+        do Memory.poke(memAddress +736, -128);
+        do Memory.poke(memAddress +768, -256);
+        do Memory.poke(memAddress +800, -512);
+        do Memory.poke(memAddress +832, -1024);
+        do Memory.poke(memAddress +864, -2048);
+        do Memory.poke(memAddress +896, -4096);
+        do Memory.poke(memAddress +928, -8192);
+        do Memory.poke(memAddress +960, -16384);
+        do Memory.poke(memAddress +992, ~32767);
+        // column 1
+        do Memory.poke(memAddress +1, 1984);
+        do Memory.poke(memAddress +33, 8176);
+        do Memory.poke(memAddress +65, 16376);
+        do Memory.poke(memAddress +97, 32508);
+        do Memory.poke(memAddress +129, 31996);
+        do Memory.poke(memAddress +161, -3586);
+        do Memory.poke(memAddress +193, -3074);
+        do Memory.poke(memAddress +225, -7169);
+        do Memory.poke(memAddress +257, -7169);
+        do Memory.poke(memAddress +289, -7169);
+        do Memory.poke(memAddress +321, -3073);
+        do Memory.poke(memAddress +353, -3073);
+        do Memory.poke(memAddress +385, -1537);
+        do Memory.poke(memAddress +417, -769);
+        do Memory.poke(memAddress +449, -257);
+        do Memory.poke(memAddress +481, -1);
+        do Memory.poke(memAddress +513, -1);
+        do Memory.poke(memAddress +545, 32767);
+        do Memory.poke(memAddress +577, 16383);
+        do Memory.poke(memAddress +609, 8191);
+        do Memory.poke(memAddress +641, 4095);
+        do Memory.poke(memAddress +673, 2047);
+        do Memory.poke(memAddress +705, 1023);
+        do Memory.poke(memAddress +737, 511);
+        do Memory.poke(memAddress +769, 255);
+        do Memory.poke(memAddress +801, 127);
+        do Memory.poke(memAddress +833, 63);
+        do Memory.poke(memAddress +865, 31);
+        do Memory.poke(memAddress +897, 15);
+        do Memory.poke(memAddress +929, 7);
+        do Memory.poke(memAddress +961, 3);
+        do Memory.poke(memAddress +993, 1);
+        return;
+    }
+
+    /** Modified spawn position for heart */
+    method void spawnHeart(int lives) {
+        var int i;
+        if ((~heartActive) & (lives < 3)) {
+            let i = 0;
+            while (i < maxTargets) {
+                if (~targetActive[i]) {
+                    let targetTypes[i] = 6;  // 6 = Heart
+                    // Place heart in more visible location
+                    let targetX[i] = 50 + Random.randRange(400); // Random X between 50-450
+                    let targetY[i] = 50 + Random.randRange(100); // Random Y between 50-150
+                    let targetActive[i] = true;
+                    let heartActive = true;
+                    do drawTarget(i);
+                    let activeTargets = activeTargets + 1;
+                    return;
+                }
+                let i = i + 1;
+            }
+        }
+        return;
+    }
+
+    /** Adds a heart bonus target */
+    method void addHeart() {
+        var int i;
+        let i = 0;
+        
+        while (i < maxTargets) {
+            if (~targetActive[i]) {
+                let targetTypes[i] = 6;  // 6 = Heart
+                do getValidPosition(i);
+                let targetActive[i] = true;
+                do drawTarget(i);
+                let activeTargets = activeTargets + 1;
+                return;
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
     // Slightly Modified
     /** Checks if a shot hits a target */
     method int checkHit(int gunX) {
@@ -183,16 +308,27 @@ class Wall {
                     let distance = tX - gunX;
                 }
                 
-                if (distance < 20) {  // Hit threshold
-                    do clearTarget(i);
-                    let targetActive[i] = false;
-                    let activeTargets = activeTargets - 1;
-                    let hitType = type;
-                    if (type = 5) { // Star hit
-                        let starActive = false;
+                // Adjust hit threshold for heart type
+                if (type = 6) {  // Heart
+                    if (distance < 25) {  // Increased hit area for heart
+                        do clearTarget(i);
+                        let targetActive[i] = false;
+                        let activeTargets = activeTargets - 1;
+                        let hitType = type;
+                        let heartActive = false;
+                        return hitType;
                     }
-                    
-                    return hitType;
+                } else {
+                    if (distance < 20) {  // Original hit threshold for other shapes
+                        do clearTarget(i);
+                        let targetActive[i] = false;
+                        let activeTargets = activeTargets - 1;
+                        let hitType = type;
+                        if (type = 5) { // Star hit
+                            let starActive = false;
+                        }
+                        return hitType;
+                    }
                 }
             }
             let i = i + 1;
@@ -203,6 +339,7 @@ class Wall {
 
     // slightly modified
     /** Clears a target from the screen */
+    /** Clears a target from the screen */
     method void clearTarget(int index) {
         var int type, x, y, size;
         
@@ -211,8 +348,13 @@ class Wall {
         let y = targetY[index];
         let size = 15;  // Default size
         
-        do Screen.setColor(false);
+        if (type = 6) {  // Heart (bonus)
+            do clearHeart(x, y, size);
+            return;
+        }
         
+        // Handle other shapes as before
+        do Screen.setColor(false);
         if (type = 1) {  // Circle
             do Screen.drawCircle(x, y, size);
         }
@@ -230,7 +372,84 @@ class Wall {
         }
         return;
     }
-    
+
+    /** Helper method to clear heart */
+    method void clearHeart(int x, int y, int size) {
+        var int memAddress, screenX, screenY, location;
+        // Adjust for heart sprite size to center it at target coordinates
+        let screenX = x - 8;
+        let screenY = y - 8;
+        let location = screenX + (screenY * 32);
+        let memAddress = 16384+location;
+
+        // column 0
+        do Memory.poke(memAddress, 0);
+        do Memory.poke(memAddress +32, 0);
+        do Memory.poke(memAddress +64, 0);
+        do Memory.poke(memAddress +96, 0);
+        do Memory.poke(memAddress +128, 0);
+        do Memory.poke(memAddress +160, 0);
+        do Memory.poke(memAddress +192, 0);
+        do Memory.poke(memAddress +224, 0);
+        do Memory.poke(memAddress +256, 0);
+        do Memory.poke(memAddress +288, 0);
+        do Memory.poke(memAddress +320, 0);
+        do Memory.poke(memAddress +352, 0);
+        do Memory.poke(memAddress +384, 0);
+        do Memory.poke(memAddress +416, 0);
+        do Memory.poke(memAddress +448, 0);
+        do Memory.poke(memAddress +480, 0);
+        do Memory.poke(memAddress +512, 0);
+        do Memory.poke(memAddress +544, 0);
+        do Memory.poke(memAddress +576, 0);
+        do Memory.poke(memAddress +608, 0);
+        do Memory.poke(memAddress +640, 0);
+        do Memory.poke(memAddress +672, 0);
+        do Memory.poke(memAddress +704, 0);
+        do Memory.poke(memAddress +736, 0);
+        do Memory.poke(memAddress +768, 0);
+        do Memory.poke(memAddress +800, 0);
+        do Memory.poke(memAddress +832, 0);
+        do Memory.poke(memAddress +864, 0);
+        do Memory.poke(memAddress +896, 0);
+        do Memory.poke(memAddress +928, 0);
+        do Memory.poke(memAddress +960, 0);
+        do Memory.poke(memAddress +992, 0);
+        // column 1
+        do Memory.poke(memAddress +1, 0);
+        do Memory.poke(memAddress +33, 0);
+        do Memory.poke(memAddress +65, 0);
+        do Memory.poke(memAddress +97, 0);
+        do Memory.poke(memAddress +129, 0);
+        do Memory.poke(memAddress +161, 0);
+        do Memory.poke(memAddress +193, 0);
+        do Memory.poke(memAddress +225, 0);
+        do Memory.poke(memAddress +257, 0);
+        do Memory.poke(memAddress +289, 0);
+        do Memory.poke(memAddress +321, 0);
+        do Memory.poke(memAddress +353, 0);
+        do Memory.poke(memAddress +385, 0);
+        do Memory.poke(memAddress +417, 0);
+        do Memory.poke(memAddress +449, 0);
+        do Memory.poke(memAddress +481, 0);
+        do Memory.poke(memAddress +513, 0);
+        do Memory.poke(memAddress +545, 0);
+        do Memory.poke(memAddress +577, 0);
+        do Memory.poke(memAddress +609, 0);
+        do Memory.poke(memAddress +641, 0);
+        do Memory.poke(memAddress +673, 0);
+        do Memory.poke(memAddress +705, 0);
+        do Memory.poke(memAddress +737, 0);
+        do Memory.poke(memAddress +769, 0);
+        do Memory.poke(memAddress +801, 0);
+        do Memory.poke(memAddress +833, 0);
+        do Memory.poke(memAddress +865, 0);
+        do Memory.poke(memAddress +897, 0);
+        do Memory.poke(memAddress +929, 0);
+        do Memory.poke(memAddress +961, 0);
+        do Memory.poke(memAddress +993, 0);
+        return;
+    }
 
     /** Regenerates targets */
     method void regenerateTargets() {
@@ -310,10 +529,13 @@ class Wall {
     }
     
     /** Updates target positions based on current level */
-    method void updateTargets(int level) {
+    method void updateTargets(int level, int lives) {
         var int i, oldX, oldY;
         let i = 0;
-        
+
+        // Check and spawn heart bonus shape
+        do spawnHeart(lives);
+
         if (level > 1) {  // Only move targets in level 2+
             while (i < maxTargets) {
                 if (targetActive[i]) {
@@ -352,6 +574,9 @@ class Wall {
                     if (targetTypes[i] = 5) {  // Star
                         do drawStar(oldX, oldY, 15);
                     }
+                    if (targetTypes[i] = 6) {  // Heart
+                        do drawHeart(oldX, oldY, 15);
+                    }
                     
                     // Draw at new position
                     do Screen.setColor(true);
@@ -370,6 +595,9 @@ class Wall {
                     }
                     if (targetTypes[i] = 5) {  // Star
                         do drawStar(targetX[i], targetY[i], 15);
+                    }
+                    if (targetTypes[i] = 6) {  // Heart
+                        do drawHeart(targetX[i], targetY[i], 15);
                     }
                 }
                 let i = i + 1;

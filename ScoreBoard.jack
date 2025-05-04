@@ -20,7 +20,6 @@ class ScoreBoard {
         if (lives > 3) {
             let lives = 3;
         }
-
         // Only update if values changed (to avoid flicker)
         if (~(score = lastScore)) {
             do clearScore();
